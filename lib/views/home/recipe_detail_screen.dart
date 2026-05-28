@@ -279,10 +279,6 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen>
                                   icon: Icons.local_fire_department_rounded,
                                   label: '${recipe.calories} cal',
                                 ),
-                                InfoPill(
-                                  icon: Icons.fitness_center_rounded,
-                                  label: '${macros['protein'] ?? '0g'} protein',
-                                ),
                               ],
                             ),
                           ],
