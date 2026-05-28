@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../controllers/meal_plan_controller.dart';
+import '../../../models/budget_summary.dart';
 import '../../../models/recipe_model.dart';
 import '../../../models/user_model.dart';
 import '../../../services/firestore_service.dart';
@@ -17,13 +19,10 @@ class DashboardTab extends StatelessWidget {
   });
 
   static final _firestore = FirestoreService();
+  static final _mealPlan = MealPlanController();
 
   @override
   Widget build(BuildContext context) {
-    final budgetCap = student.weeklyBudget <= 0 ? 60.0 : student.weeklyBudget;
-    const spent = 45.0;
-    final remaining = (budgetCap - spent).clamp(0, budgetCap);
-    final progress = (spent / budgetCap).clamp(0.0, 1.0);
     final pantry = student.availableIngredients;
     final screenH = MediaQuery.sizeOf(context).height;
     final recipeStripH = (screenH * 0.26).clamp(200.0, 280.0).toDouble();
@@ -46,35 +45,28 @@ class DashboardTab extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        'Weekly Budget',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const Spacer(),
-                      Text(
-                        'RM${spent.toStringAsFixed(2)} / RM${budgetCap.toStringAsFixed(2)}',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 8,
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                  const SizedBox(height: 8),
-                  Text('RM${remaining.toStringAsFixed(2)} remaining this week'),
-                ],
-              ),
+          StreamBuilder<BudgetSummary>(
+            stream: _mealPlan.watchCurrentWeekBudgetSummary(
+              uid: student.uid,
+              weeklyBudget: student.weeklyBudget,
             ),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return const Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(14),
+                    child: Text('Unable to load weekly budget.'),
+                  ),
+                );
+              }
+              final summary =
+                  snapshot.data ??
+                  BudgetSummary.fromMealPlanItems(
+                    weeklyBudget: student.weeklyBudget,
+                    items: const [],
+                  );
+              return _DashboardBudgetCard(summary: summary);
+            },
           ),
           const SizedBox(height: 14),
           Row(
@@ -147,7 +139,9 @@ class DashboardTab extends StatelessWidget {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snap.hasError) {
-                  return Center(child: Text('Could not load recipes: ${snap.error}'));
+                  return Center(
+                    child: Text('Could not load recipes: ${snap.error}'),
+                  );
                 }
                 final all = snap.data ?? const <Recipe>[];
                 final ranked = applyRecipeTabFilters(
@@ -155,6 +149,7 @@ class DashboardTab extends StatelessWidget {
                   pantry: pantry,
                   filterIndex: 0,
                   weeklyBudget: student.weeklyBudget,
+                  maxPrepTimeMinutes: student.maxPrepTimeMinutes,
                 );
                 final top = ranked.take(12).toList();
 
@@ -173,7 +168,8 @@ class DashboardTab extends StatelessWidget {
                 return ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: top.length,
-                  separatorBuilder: (context, index) => const SizedBox(width: 10),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: 10),
                   itemBuilder: (context, i) {
                     final r = top[i];
                     return RecipeMiniCard(
@@ -197,6 +193,62 @@ class DashboardTab extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DashboardBudgetCard extends StatelessWidget {
+  final BudgetSummary summary;
+
+  const _DashboardBudgetCard({required this.summary});
+
+  @override
+  Widget build(BuildContext context) {
+    final planned = summary.plannedCost.toStringAsFixed(2);
+    final cap = summary.hasBudget
+        ? 'RM${summary.weeklyBudget.toStringAsFixed(2)}'
+        : 'No budget set';
+    final remaining = summary.hasBudget
+        ? 'RM${summary.remaining.clamp(0.0, summary.weeklyBudget).toStringAsFixed(2)} remaining this week'
+        : 'Set a weekly budget to track your plan';
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Weekly Budget',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const Spacer(),
+                Text('RM$planned / $cap'),
+              ],
+            ),
+            const SizedBox(height: 10),
+            LinearProgressIndicator(
+              value: summary.progress,
+              color: summary.isOverBudget
+                  ? Theme.of(context).colorScheme.error
+                  : null,
+              minHeight: 8,
+              borderRadius: BorderRadius.circular(99),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              summary.isOverBudget
+                  ? 'Over budget by RM${summary.overage.toStringAsFixed(2)}'
+                  : remaining,
+              style: summary.isOverBudget
+                  ? TextStyle(color: Theme.of(context).colorScheme.error)
+                  : null,
+            ),
+          ],
+        ),
       ),
     );
   }

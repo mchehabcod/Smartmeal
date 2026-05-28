@@ -37,10 +37,7 @@ class _SmartMealAppState extends State<SmartMealApp> {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: _themeMode,
-      home: AppBootstrap(
-        themeMode: _themeMode,
-        onThemeChanged: _updateTheme,
-      ),
+      home: AppBootstrap(themeMode: _themeMode, onThemeChanged: _updateTheme),
     );
   }
 }
@@ -81,10 +78,7 @@ class AppBootstrap extends StatelessWidget {
           );
         }
 
-        return AuthGate(
-          themeMode: themeMode,
-          onThemeChanged: onThemeChanged,
-        );
+        return AuthGate(themeMode: themeMode, onThemeChanged: onThemeChanged);
       },
     );
   }
@@ -177,6 +171,7 @@ class _MissingProfileBootstrap extends StatelessWidget {
         'email': user.email ?? '',
         'weeklyBudget': 0.0,
         'availableIngredients': <String>[],
+        'maxPrepTimeMinutes': 30,
       }, SetOptions(merge: true));
     } on FirebaseException catch (e) {
       throw Exception('Firebase ${e.code}: ${e.message ?? "Unknown error"}');
@@ -237,6 +232,7 @@ class _MissingProfileBootstrap extends StatelessWidget {
                 : 'Student',
             weeklyBudget: 0.0,
             availableIngredients: const [],
+            maxPrepTimeMinutes: 30,
           ),
           authController: authController,
           themeMode: themeMode,

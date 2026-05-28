@@ -4,8 +4,10 @@ class Student {
   final String email;
   final String name;
   final double weeklyBudget;
+
   /// Pantry / manual ingredients (UC004); also used to filter recipe suggestions (UC006).
   final List<String> availableIngredients;
+  final int maxPrepTimeMinutes;
 
   Student({
     required this.uid,
@@ -14,6 +16,7 @@ class Student {
     required this.name,
     this.weeklyBudget = 0.0,
     this.availableIngredients = const [],
+    this.maxPrepTimeMinutes = 30,
   }) : studentID = studentID ?? uid;
 
   Map<String, dynamic> toMap() {
@@ -24,6 +27,7 @@ class Student {
       'name': name,
       'weeklyBudget': weeklyBudget,
       'availableIngredients': availableIngredients,
+      'maxPrepTimeMinutes': maxPrepTimeMinutes,
     };
   }
 
@@ -35,6 +39,7 @@ class Student {
       name: map['name'] ?? '',
       weeklyBudget: (map['weeklyBudget'] ?? 0.0).toDouble(),
       availableIngredients: _parseStringList(map['availableIngredients']),
+      maxPrepTimeMinutes: _parsePositiveInt(map['maxPrepTimeMinutes'], 30),
     );
   }
 
@@ -44,6 +49,16 @@ class Student {
         .map((e) => e?.toString().trim() ?? '')
         .where((s) => s.isNotEmpty)
         .toList();
+  }
+
+  static int _parsePositiveInt(dynamic value, int fallback) {
+    final parsed = value is num
+        ? value.toInt()
+        : value is String
+        ? int.tryParse(value)
+        : null;
+    if (parsed == null || parsed <= 0) return fallback;
+    return parsed;
   }
 }
 

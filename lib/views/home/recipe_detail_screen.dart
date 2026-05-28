@@ -29,6 +29,54 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen>
   Recipe get recipe => widget.recipe;
 
   Future<void> _addToMealPlan(BuildContext context) async {
+    final preview = await _mealPlan.previewAddToMealPlan(
+      studentId: widget.studentId,
+      recipe: recipe,
+    );
+    if (!context.mounted) return;
+    if (preview.code == 'duplicate') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This meal is already in your plan.')),
+      );
+      return;
+    }
+    if (preview.code == 'error') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Failed to check your weekly budget. Please try again.',
+          ),
+        ),
+      );
+      return;
+    }
+    if (preview.isOverBudget) {
+      final shouldAdd = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) {
+          return AlertDialog(
+            title: const Text('Weekly budget exceeded'),
+            content: Text(
+              'Adding this meal will bring your weekly plan to '
+              'RM${preview.projectedCost.toStringAsFixed(2)}, which is '
+              'RM${preview.overage.toStringAsFixed(2)} over your budget.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: const Text('Add anyway'),
+              ),
+            ],
+          );
+        },
+      );
+      if (shouldAdd != true) return;
+    }
+
     final code = await _mealPlan.addToMealPlan(
       studentId: widget.studentId,
       recipe: recipe,
@@ -49,7 +97,13 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen>
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Meal added to your plan.')),
+      SnackBar(
+        content: Text(
+          preview.isOverBudget
+              ? 'Meal added. Your weekly plan is over budget by RM${preview.overage.toStringAsFixed(2)}.'
+              : 'Meal added to your plan.',
+        ),
+      ),
     );
   }
 
@@ -85,9 +139,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen>
       );
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Recipe added to favorites.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Recipe added to favorites.')));
   }
 
   Future<void> _logCooked(BuildContext context) async {
@@ -175,14 +229,19 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen>
                 top: 42,
                 right: 16,
                 child: StreamBuilder<bool>(
-                  stream: _favorites.watchIsFavorite(widget.studentId, recipe.id),
+                  stream: _favorites.watchIsFavorite(
+                    widget.studentId,
+                    recipe.id,
+                  ),
                   builder: (context, snap) {
                     final isFav = snap.data ?? false;
                     return CircleAvatar(
                       backgroundColor: Colors.white70,
                       child: IconButton(
                         icon: Icon(
-                          isFav ? Icons.favorite : Icons.favorite_border_rounded,
+                          isFav
+                              ? Icons.favorite
+                              : Icons.favorite_border_rounded,
                           color: isFav ? Colors.redAccent : null,
                         ),
                         onPressed: () => _toggleFavorite(context, isFav),
@@ -222,18 +281,16 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen>
                 ListView(
                   padding: const EdgeInsets.all(16),
                   children: recipe.ingredients.isEmpty
-                      ? [
-                          const Text('No ingredient list for this recipe.'),
-                        ]
+                      ? [const Text('No ingredient list for this recipe.')]
                       : recipe.ingredients.map((m) {
-                          final name =
-                              (m['name'] ?? m['original'] ?? '').toString();
+                          final name = (m['name'] ?? m['original'] ?? '')
+                              .toString();
                           final amount = m['amount'];
                           final unit = (m['unit'] ?? '').toString();
-                          final qty = [
-                            if (amount != null) amount.toString(),
-                            unit,
-                          ].where((s) => s.toString().trim().isNotEmpty).join(' ');
+                          final qty =
+                              [if (amount != null) amount.toString(), unit]
+                                  .where((s) => s.toString().trim().isNotEmpty)
+                                  .join(' ');
                           return IngredientRow(
                             name: name.isEmpty ? 'Item' : name,
                             quantity: qty.isEmpty ? '—' : qty,

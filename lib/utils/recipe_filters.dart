@@ -4,8 +4,9 @@ bool _recipeUsesPantryItem(Recipe recipe, String pantryItem) {
   final q = pantryItem.toLowerCase().trim();
   if (q.isEmpty) return false;
   for (final ing in recipe.ingredients) {
-    final name =
-        (ing['name'] ?? ing['original'] ?? '').toString().toLowerCase();
+    final name = (ing['name'] ?? ing['original'] ?? '')
+        .toString()
+        .toLowerCase();
     if (name.contains(q) || (name.isNotEmpty && q.contains(name))) {
       return true;
     }
@@ -42,8 +43,10 @@ int missingIngredientCount(Recipe recipe, List<String> pantry) {
 
 int countableRecipeIngredients(Recipe recipe) {
   return recipe.ingredients
-      .where((ing) =>
-          (ing['name'] ?? ing['original'] ?? '').toString().trim().isNotEmpty)
+      .where(
+        (ing) =>
+            (ing['name'] ?? ing['original'] ?? '').toString().trim().isNotEmpty,
+      )
       .length;
 }
 
@@ -85,12 +88,14 @@ List<Recipe> applyRecipeTabFilters({
   required List<String> pantry,
   required int filterIndex,
   required double weeklyBudget,
+  int maxPrepTimeMinutes = 30,
 }) {
   var list = recipes.where((r) => recipeMatchesPantry(r, pantry)).toList();
 
   switch (filterIndex) {
     case 1:
-      list = list.where((r) => r.prepTime > 0 && r.prepTime <= 30).toList();
+      final cap = maxPrepTimeMinutes > 0 ? maxPrepTimeMinutes : 30;
+      list = list.where((r) => r.prepTime > 0 && r.prepTime <= cap).toList();
       break;
     case 2:
       final cap = weeklyBudget > 0 ? weeklyBudget : 12.0;

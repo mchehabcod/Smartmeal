@@ -7,7 +7,7 @@ class FirestoreService {
   final FirebaseFirestore _db;
 
   FirestoreService({FirebaseFirestore? firestore})
-      : _db = firestore ?? FirebaseFirestore.instance;
+    : _db = firestore ?? FirebaseFirestore.instance;
 
   CollectionReference<Map<String, dynamic>> get _users =>
       _db.collection('users');
@@ -38,11 +38,17 @@ class FirestoreService {
   }
 
   Future<void> saveShoppingList(ShoppingList list) async {
-    await _shoppingLists.doc(list.id).set(list.toMap(), SetOptions(merge: true));
+    await _shoppingLists
+        .doc(list.id)
+        .set(list.toMap(), SetOptions(merge: true));
   }
 
   Future<void> addRecipe(Recipe recipe) async {
     await _recipes.doc(recipe.id).set(recipe.toMap(), SetOptions(merge: true));
+  }
+
+  Future<void> deleteRecipe(String recipeId) async {
+    await _recipes.doc(recipeId).delete();
   }
 
   Stream<List<Recipe>> watchRecipes() {
@@ -59,10 +65,10 @@ class FirestoreService {
     required String docId,
     required Map<String, dynamic> data,
   }) async {
-    await _db.collection(collection).doc(docId).set(
-          data,
-          SetOptions(merge: true),
-        );
+    await _db
+        .collection(collection)
+        .doc(docId)
+        .set(data, SetOptions(merge: true));
   }
 
   Future<Map<String, dynamic>?> readDocument({

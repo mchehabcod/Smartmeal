@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../../../models/user_model.dart';
 import '../../../services/recipe_seeder.dart';
+import '../admin/add_recipe_screen.dart';
+import '../admin/recipe_management_screen.dart';
 
 class ProfileTabScreen extends StatefulWidget {
   final Student student;
@@ -44,9 +46,9 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Seeding failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Seeding failed: $e')));
     } finally {
       if (mounted) {
         setState(() => _isSeeding = false);
@@ -86,18 +88,37 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
             }
             return Padding(
               padding: const EdgeInsets.only(top: 6),
-              child: FilledButton.icon(
-                onPressed: _isSeeding ? null : _seedRecipes,
-                icon: _isSeeding
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.cloud_upload_rounded),
-                label: Text(
-                  _isSeeding ? 'Seeding recipes...' : 'Seed Recipes (Admin)',
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  FilledButton.icon(
+                    onPressed: _openRecipeManager,
+                    icon: const Icon(Icons.restaurant_menu_rounded),
+                    label: const Text('Manage Recipes (Admin)'),
+                  ),
+                  const SizedBox(height: 8),
+                  FilledButton.tonalIcon(
+                    onPressed: _openAddRecipe,
+                    icon: const Icon(Icons.add_rounded),
+                    label: const Text('Add Recipe (Admin)'),
+                  ),
+                  const SizedBox(height: 8),
+                  FilledButton.tonalIcon(
+                    onPressed: _isSeeding ? null : _seedRecipes,
+                    icon: _isSeeding
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.cloud_upload_rounded),
+                    label: Text(
+                      _isSeeding
+                          ? 'Seeding recipes...'
+                          : 'Seed Recipes (Admin)',
+                    ),
+                  ),
+                ],
               ),
             );
           },
@@ -110,5 +131,17 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
         ),
       ],
     );
+  }
+
+  Future<void> _openAddRecipe() async {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const AddRecipeScreen()));
+  }
+
+  Future<void> _openRecipeManager() async {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => RecipeManagementScreen()));
   }
 }
