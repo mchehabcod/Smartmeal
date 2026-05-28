@@ -190,8 +190,8 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen>
   Widget build(BuildContext context) {
     final macros = recipe.macros;
     final screenHeight = MediaQuery.sizeOf(context).height;
-    final headerHeight = (screenHeight * 0.43).clamp(320.0, 370.0).toDouble();
-    final heroHeight = (headerHeight - 128).clamp(190.0, 240.0).toDouble();
+    final headerHeight = (screenHeight * 0.55).clamp(420.0, 470.0).toDouble();
+    final heroHeight = (headerHeight - 188).clamp(210.0, 260.0).toDouble();
 
     return Scaffold(
       body: SafeArea(
@@ -284,6 +284,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen>
                           ],
                         ),
                       ),
+                      const SizedBox(height: kTextTabBarHeight),
                     ],
                   ),
                 ),
