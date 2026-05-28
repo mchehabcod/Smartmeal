@@ -1,5 +1,154 @@
 import 'package:flutter/material.dart';
 
+class RecipeHeroVisual extends StatelessWidget {
+  final String title;
+  final String imageUrl;
+  final double? height;
+  final BorderRadius borderRadius;
+  final bool showTitle;
+
+  const RecipeHeroVisual({
+    super.key,
+    required this.title,
+    this.imageUrl = '',
+    this.height,
+    this.borderRadius = BorderRadius.zero,
+    this.showTitle = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final url = imageUrl.trim();
+    final visual = url.isEmpty
+        ? _RecipeFallbackArt(title: title)
+        : Image.network(
+            url,
+            fit: BoxFit.cover,
+            loadingBuilder: (context, child, progress) {
+              if (progress == null) return child;
+              return _RecipeFallbackArt(title: title);
+            },
+            errorBuilder: (context, error, stackTrace) {
+              return _RecipeFallbackArt(title: title);
+            },
+          );
+
+    return ClipRRect(
+      borderRadius: borderRadius,
+      child: SizedBox(
+        height: height,
+        width: double.infinity,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            visual,
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0x11000000), Color(0xAA000000)],
+                ),
+              ),
+            ),
+            if (showTitle)
+              Positioned(
+                left: 14,
+                right: 14,
+                bottom: 14,
+                child: Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RecipeFallbackArt extends StatelessWidget {
+  final String title;
+
+  const _RecipeFallbackArt({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = _recipeAccent(title);
+    final deep = Color.lerp(accent, const Color(0xFF1F2C3F), 0.45)!;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [accent, deep],
+        ),
+      ),
+      child: Align(
+        alignment: Alignment.center,
+        child: Icon(
+          Icons.restaurant_menu_rounded,
+          size: 72,
+          color: Colors.white.withAlpha(54),
+        ),
+      ),
+    );
+  }
+}
+
+Color _recipeAccent(String title) {
+  const colors = [
+    Color(0xFF2E9D6F),
+    Color(0xFFF2B84B),
+    Color(0xFFE56B6F),
+    Color(0xFF4E79A7),
+    Color(0xFF7A6FF0),
+  ];
+  final hash = title.codeUnits.fold<int>(0, (sum, code) => sum + code);
+  return colors[hash % colors.length];
+}
+
+class InfoPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const InfoPill({super.key, required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withAlpha(190),
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15, color: scheme.onSurfaceVariant),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class ActionTile extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -14,6 +163,8 @@ class ActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -23,13 +174,26 @@ class ActionTile extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircleAvatar(
-                backgroundColor:
-                    Theme.of(context).colorScheme.surfaceContainerHighest,
-                child: Icon(icon),
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: scheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: scheme.onSecondaryContainer),
               ),
               const SizedBox(height: 8),
-              Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
             ],
           ),
         ),
@@ -42,6 +206,7 @@ class RecipeMiniCard extends StatelessWidget {
   final String title;
   final String time;
   final String price;
+  final String imageUrl;
   final VoidCallback? onTap;
 
   const RecipeMiniCard({
@@ -49,6 +214,7 @@ class RecipeMiniCard extends StatelessWidget {
     required this.title,
     required this.time,
     required this.price,
+    this.imageUrl = '',
     this.onTap,
   });
 
@@ -75,20 +241,11 @@ class RecipeMiniCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
-                  child: Container(
-                    color: Colors.blueGrey.shade300,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                    alignment: Alignment.center,
-                    child: Text(
-                      title,
-                      textAlign: TextAlign.center,
-                      maxLines: 8,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
+                  child: RecipeHeroVisual(
+                    title: title,
+                    imageUrl: imageUrl,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(12),
                     ),
                   ),
                 ),
@@ -97,20 +254,13 @@ class RecipeMiniCard extends StatelessWidget {
                   child: Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          time,
-                          style: Theme.of(context).textTheme.labelMedium,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        child: _MiniMeta(
+                          icon: Icons.schedule_rounded,
+                          label: time,
                         ),
                       ),
                       const SizedBox(width: 6),
-                      Text(
-                        price,
-                        style: Theme.of(context).textTheme.labelMedium,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      _MiniMeta(icon: Icons.payments_rounded, label: price),
                     ],
                   ),
                 ),
@@ -129,6 +279,32 @@ class RecipeMiniCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: core,
       ),
+    );
+  }
+}
+
+class _MiniMeta extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _MiniMeta({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: Theme.of(context).colorScheme.secondary),
+        const SizedBox(width: 3),
+        Flexible(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -152,15 +328,7 @@ class RecipeCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            height: 150,
-            color: Colors.blueGrey.shade300,
-            alignment: Alignment.center,
-            child: const Text(
-              'Recipe Image',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-            ),
-          ),
+          RecipeHeroVisual(title: title, height: 150),
           Padding(
             padding: const EdgeInsets.all(14),
             child: Column(
@@ -175,9 +343,10 @@ class RecipeCard extends StatelessWidget {
                   const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
-                    child: FilledButton(
+                    child: FilledButton.icon(
                       onPressed: onView,
-                      child: const Text('View Recipe'),
+                      icon: const Icon(Icons.restaurant_menu_rounded),
+                      label: const Text('View Recipe'),
                     ),
                   ),
                 ],
@@ -223,8 +392,8 @@ class IngredientRow extends StatelessWidget {
         children: [
           const Text('• ', style: TextStyle(fontSize: 18)),
           Expanded(
-              child: Text(name,
-                  style: Theme.of(context).textTheme.titleMedium)),
+            child: Text(name, style: Theme.of(context).textTheme.titleMedium),
+          ),
           Text(quantity),
         ],
       ),

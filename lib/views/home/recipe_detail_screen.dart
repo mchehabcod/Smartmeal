@@ -189,30 +189,16 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen>
   @override
   Widget build(BuildContext context) {
     final macros = recipe.macros;
-    final meta =
-        '${recipe.prepTime} min    RM${recipe.estimatedCost.toStringAsFixed(2)}    '
-        '${recipe.calories} cal    ${macros['protein'] ?? '0g'} protein';
 
     return Scaffold(
       body: Column(
         children: [
           Stack(
             children: [
-              Container(
-                height: 270,
-                width: double.infinity,
-                color: const Color(0xFF34445B),
-                alignment: Alignment.center,
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Text(
-                  recipe.title,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 18,
-                  ),
-                ),
+              RecipeHeroVisual(
+                title: recipe.title,
+                imageUrl: recipe.imageUrl,
+                height: 290,
               ),
               Positioned(
                 top: 42,
@@ -262,7 +248,28 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen>
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 8),
-                Text(meta),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    InfoPill(
+                      icon: Icons.schedule_rounded,
+                      label: '${recipe.prepTime} min',
+                    ),
+                    InfoPill(
+                      icon: Icons.payments_rounded,
+                      label: 'RM${recipe.estimatedCost.toStringAsFixed(2)}',
+                    ),
+                    InfoPill(
+                      icon: Icons.local_fire_department_rounded,
+                      label: '${recipe.calories} cal',
+                    ),
+                    InfoPill(
+                      icon: Icons.fitness_center_rounded,
+                      label: '${macros['protein'] ?? '0g'} protein',
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -355,17 +362,19 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen>
               children: [
                 SizedBox(
                   width: double.infinity,
-                  child: FilledButton(
+                  child: FilledButton.icon(
                     onPressed: () => _addToMealPlan(context),
-                    child: const Text('Add to Meal Plan'),
+                    icon: const Icon(Icons.event_note_rounded),
+                    label: const Text('Add to Meal Plan'),
                   ),
                 ),
                 const SizedBox(height: 8),
                 SizedBox(
                   width: double.infinity,
-                  child: OutlinedButton(
+                  child: OutlinedButton.icon(
                     onPressed: () => _logCooked(context),
-                    child: const Text('Mark as cooked'),
+                    icon: const Icon(Icons.check_circle_outline_rounded),
+                    label: const Text('Mark as cooked'),
                   ),
                 ),
               ],

@@ -7,6 +7,7 @@ class Recipe {
   final double estimatedCost;
   final int calories;
   final Map<String, String> macros;
+  final String imageUrl;
 
   const Recipe({
     required this.id,
@@ -17,6 +18,7 @@ class Recipe {
     required this.estimatedCost,
     required this.calories,
     this.macros = const {'protein': '0g', 'carbs': '0g', 'fat': '0g'},
+    this.imageUrl = '',
   });
 
   Map<String, dynamic> toMap() {
@@ -29,6 +31,7 @@ class Recipe {
       'estimatedCost': estimatedCost,
       'calories': calories,
       'macros': macros,
+      'imageUrl': imageUrl,
     };
   }
 
@@ -48,6 +51,7 @@ class Recipe {
       estimatedCost: _toDouble(map['estimatedCost']),
       calories: _toInt(map['calories']),
       macros: _toStringMap(map['macros']),
+      imageUrl: map['imageUrl']?.toString() ?? '',
     );
   }
 

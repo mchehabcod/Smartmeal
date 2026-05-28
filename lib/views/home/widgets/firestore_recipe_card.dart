@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../models/recipe_model.dart';
 import '../../../utils/recipe_filters.dart';
+import 'home_widgets.dart';
 
 class FirestoreRecipeCard extends StatelessWidget {
   final Recipe recipe;
   final VoidCallback onView;
+
   /// UC004 ranked list hint (e.g. missing ingredient count).
   final String? rankCaption;
 
@@ -17,8 +19,6 @@ class FirestoreRecipeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final meta =
-        '${recipe.prepTime} min    RM${recipe.estimatedCost.toStringAsFixed(2)}    ${recipe.calories} cal';
     final caption = rankCaption?.trim();
 
     return Card(
@@ -27,21 +27,10 @@ class FirestoreRecipeCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            height: 150,
-            color: Colors.blueGrey.shade400,
-            alignment: Alignment.center,
-            child: Text(
-              recipe.title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
+          RecipeHeroVisual(
+            title: recipe.title,
+            imageUrl: recipe.imageUrl,
+            height: 168,
           ),
           Padding(
             padding: const EdgeInsets.all(14),
@@ -53,13 +42,27 @@ class FirestoreRecipeCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 4),
-                Text(meta),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    InfoPill(
+                      icon: Icons.schedule_rounded,
+                      label: '${recipe.prepTime} min',
+                    ),
+                    InfoPill(
+                      icon: Icons.payments_rounded,
+                      label: 'RM${recipe.estimatedCost.toStringAsFixed(2)}',
+                    ),
+                    InfoPill(
+                      icon: Icons.local_fire_department_rounded,
+                      label: '${recipe.calories} cal',
+                    ),
+                  ],
+                ),
                 if (caption != null && caption.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    caption,
-                    style: Theme.of(context).textTheme.labelMedium,
-                  ),
+                  const SizedBox(height: 8),
+                  Text(caption, style: Theme.of(context).textTheme.labelMedium),
                 ],
                 const SizedBox(height: 8),
                 Text(
@@ -70,9 +73,10 @@ class FirestoreRecipeCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
-                  child: FilledButton(
+                  child: FilledButton.icon(
                     onPressed: onView,
-                    child: const Text('View Recipe'),
+                    icon: const Icon(Icons.restaurant_menu_rounded),
+                    label: const Text('View Recipe'),
                   ),
                 ),
               ],

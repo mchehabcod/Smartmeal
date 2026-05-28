@@ -4,20 +4,32 @@ import 'package:http/http.dart' as http;
 import '../models/recipe_model.dart';
 
 class RecipeSeeder {
-  static const String _apiKey = '7da427071a0a455494f68765b3de2eb8';
+  static const String _configuredApiKey = String.fromEnvironment(
+    'SPOONACULAR_API_KEY',
+  );
   static const String _baseUrl = 'https://api.spoonacular.com';
 
   final FirebaseFirestore _db;
   final http.Client _client;
+  final String _apiKey;
 
   RecipeSeeder({
     FirebaseFirestore? firestore,
     http.Client? client,
-  })  : _db = firestore ?? FirebaseFirestore.instance,
-        _client = client ?? http.Client();
+    String? apiKey,
+  }) : _db = firestore ?? FirebaseFirestore.instance,
+       _client = client ?? http.Client(),
+       _apiKey = (apiKey ?? _configuredApiKey).trim();
 
   /// Call once to seed first 50 recipes.
   Future<int> seedSampleData({String keyword = 'pasta', int limit = 50}) async {
+    if (_apiKey.isEmpty) {
+      throw StateError(
+        'Spoonacular API key is not configured. Start the app with '
+        '--dart-define=SPOONACULAR_API_KEY=your_key to seed recipes.',
+      );
+    }
+
     final recipeIds = await _fetchRecipeIdsByKeyword(
       keyword: keyword,
       limit: limit,
@@ -53,7 +65,7 @@ class RecipeSeeder {
       '&number=$limit'
       '&ranking=2'
       '&ignorePantry=true'
-      '&apiKey=$_apiKey',
+      '&apiKey=${Uri.encodeQueryComponent(_apiKey)}',
     );
 
     final response = await _client.get(uri);
@@ -74,7 +86,7 @@ class RecipeSeeder {
     final uri = Uri.parse(
       '$_baseUrl/recipes/$id/information'
       '?includeNutrition=true'
-      '&apiKey=$_apiKey',
+      '&apiKey=${Uri.encodeQueryComponent(_apiKey)}',
     );
 
     final response = await _client.get(uri);
@@ -99,6 +111,7 @@ class RecipeSeeder {
       estimatedCost: _toDouble(raw['pricePerServing']) / 100.0,
       calories: _extractCalories(raw['nutrition']),
       macros: macros,
+      imageUrl: raw['image']?.toString() ?? '',
     );
   }
 

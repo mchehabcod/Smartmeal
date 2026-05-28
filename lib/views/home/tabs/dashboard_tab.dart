@@ -176,6 +176,7 @@ class DashboardTab extends StatelessWidget {
                       title: r.title,
                       time: '${r.prepTime} min',
                       price: 'RM${r.estimatedCost.toStringAsFixed(2)}',
+                      imageUrl: r.imageUrl,
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute<void>(
