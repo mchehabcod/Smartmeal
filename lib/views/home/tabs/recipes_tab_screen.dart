@@ -27,86 +27,12 @@ class _RecipesTabScreenState extends State<RecipesTabScreen> {
 
   Future<void> _editTimeConstraint() async {
     final current = _maxPrepTimeMinutes;
-    final controller = TextEditingController(text: current.toString());
-    var selected = current;
 
     final minutes = await showDialog<int>(
       context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (dialogContext, setDialogState) {
-            void save() {
-              final value = int.tryParse(controller.text.trim());
-              if (value == null || value <= 0) {
-                ScaffoldMessenger.of(dialogContext).showSnackBar(
-                  const SnackBar(
-                    content: Text('Enter a prep time greater than 0 minutes.'),
-                  ),
-                );
-                return;
-              }
-              if (value > 240) {
-                ScaffoldMessenger.of(dialogContext).showSnackBar(
-                  const SnackBar(
-                    content: Text('Prep time must be 240 minutes or less.'),
-                  ),
-                );
-                return;
-              }
-              Navigator.pop(dialogContext, value);
-            }
-
-            return AlertDialog(
-              title: const Text('Set prep time'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Wrap(
-                    spacing: 8,
-                    children: [15, 30, 45, 60].map((minutes) {
-                      return ChoiceChip(
-                        selected: selected == minutes,
-                        label: Text('$minutes min'),
-                        onSelected: (_) {
-                          setDialogState(() {
-                            selected = minutes;
-                            controller.text = minutes.toString();
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 14),
-                  TextField(
-                    controller: controller,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Custom minutes',
-                    ),
-                    onChanged: (value) {
-                      final parsed = int.tryParse(value.trim());
-                      if (parsed != null) {
-                        setDialogState(() => selected = parsed);
-                      }
-                    },
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Cancel'),
-                ),
-                FilledButton(onPressed: save, child: const Text('Save')),
-              ],
-            );
-          },
-        );
-      },
+      builder: (dialogContext) => _PrepTimeDialog(current: current),
     );
 
-    controller.dispose();
     if (!mounted || minutes == null) return;
 
     final previous = _maxPrepTimeMinutes;
@@ -248,6 +174,107 @@ class _RecipesTabScreenState extends State<RecipesTabScreen> {
           ],
         );
       },
+    );
+  }
+}
+
+class _PrepTimeDialog extends StatefulWidget {
+  final int current;
+
+  const _PrepTimeDialog({required this.current});
+
+  @override
+  State<_PrepTimeDialog> createState() => _PrepTimeDialogState();
+}
+
+class _PrepTimeDialogState extends State<_PrepTimeDialog> {
+  late final TextEditingController _controller;
+  late int _selected;
+  String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = widget.current;
+    _controller = TextEditingController(text: widget.current.toString());
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _selectPreset(int minutes) {
+    setState(() {
+      _selected = minutes;
+      _controller.text = minutes.toString();
+      _errorText = null;
+    });
+  }
+
+  void _save() {
+    final value = int.tryParse(_controller.text.trim());
+    if (value == null || value <= 0) {
+      setState(() {
+        _errorText = 'Enter a prep time greater than 0 minutes.';
+      });
+      return;
+    }
+    if (value > 240) {
+      setState(() {
+        _errorText = 'Prep time must be 240 minutes or less.';
+      });
+      return;
+    }
+    Navigator.of(context).pop(value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Set prep time'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [15, 30, 45, 60].map((minutes) {
+              return ChoiceChip(
+                selected: _selected == minutes,
+                label: Text('$minutes min'),
+                onSelected: (_) => _selectPreset(minutes),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _controller,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: 'Custom minutes',
+              errorText: _errorText,
+            ),
+            onChanged: (value) {
+              final parsed = int.tryParse(value.trim());
+              setState(() {
+                _selected = parsed ?? -1;
+                _errorText = null;
+              });
+            },
+            onSubmitted: (_) => _save(),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(onPressed: _save, child: const Text('Save')),
+      ],
     );
   }
 }

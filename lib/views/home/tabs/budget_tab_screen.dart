@@ -33,13 +33,9 @@ class BudgetTabScreen extends StatelessWidget {
               'Budget Tracker',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
-            const Spacer(),
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.settings_rounded),
-            ),
           ],
         ),
+        const SizedBox(height: 12),
         StreamBuilder<BudgetSummary>(
           stream: _mealPlan.watchCurrentWeekBudgetSummary(
             uid: student.uid,

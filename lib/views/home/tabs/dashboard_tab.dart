@@ -38,9 +38,16 @@ class DashboardTab extends StatelessWidget {
               const SizedBox(width: 8),
               Text('SmartMeal', style: Theme.of(context).textTheme.titleLarge),
               const Spacer(),
-              const CircleAvatar(
-                radius: 16,
-                child: Icon(Icons.person_rounded, size: 18),
+              Tooltip(
+                message: 'Profile',
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(18),
+                  onTap: () => onTabChange(5),
+                  child: const CircleAvatar(
+                    radius: 16,
+                    child: Icon(Icons.person_rounded, size: 18),
+                  ),
+                ),
               ),
             ],
           ),

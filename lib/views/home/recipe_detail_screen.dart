@@ -189,198 +189,224 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen>
   @override
   Widget build(BuildContext context) {
     final macros = recipe.macros;
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final headerHeight = (screenHeight * 0.43).clamp(320.0, 370.0).toDouble();
+    final heroHeight = (headerHeight - 128).clamp(190.0, 240.0).toDouble();
 
     return Scaffold(
-      body: Column(
-        children: [
-          Stack(
-            children: [
-              RecipeHeroVisual(
-                title: recipe.title,
-                imageUrl: recipe.imageUrl,
-                height: 290,
-              ),
-              Positioned(
-                top: 42,
-                left: 16,
-                child: CircleAvatar(
-                  backgroundColor: Colors.white70,
-                  child: IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back),
+      body: SafeArea(
+        top: false,
+        child: NestedScrollView(
+          headerSliverBuilder: (context, innerBoxIsScrolled) {
+            return [
+              SliverAppBar(
+                pinned: true,
+                expandedHeight: headerHeight,
+                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
+                leading: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: CircleAvatar(
+                    backgroundColor: Colors.white70,
+                    child: IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.arrow_back),
+                    ),
                   ),
                 ),
-              ),
-              Positioned(
-                top: 42,
-                right: 16,
-                child: StreamBuilder<bool>(
-                  stream: _favorites.watchIsFavorite(
-                    widget.studentId,
-                    recipe.id,
-                  ),
-                  builder: (context, snap) {
-                    final isFav = snap.data ?? false;
-                    return CircleAvatar(
-                      backgroundColor: Colors.white70,
-                      child: IconButton(
-                        icon: Icon(
-                          isFav
-                              ? Icons.favorite
-                              : Icons.favorite_border_rounded,
-                          color: isFav ? Colors.redAccent : null,
-                        ),
-                        onPressed: () => _toggleFavorite(context, isFav),
+                actions: [
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: StreamBuilder<bool>(
+                      stream: _favorites.watchIsFavorite(
+                        widget.studentId,
+                        recipe.id,
                       ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  recipe.title,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    InfoPill(
-                      icon: Icons.schedule_rounded,
-                      label: '${recipe.prepTime} min',
-                    ),
-                    InfoPill(
-                      icon: Icons.payments_rounded,
-                      label: 'RM${recipe.estimatedCost.toStringAsFixed(2)}',
-                    ),
-                    InfoPill(
-                      icon: Icons.local_fire_department_rounded,
-                      label: '${recipe.calories} cal',
-                    ),
-                    InfoPill(
-                      icon: Icons.fitness_center_rounded,
-                      label: '${macros['protein'] ?? '0g'} protein',
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          TabBar(
-            controller: _tabController,
-            tabs: const [
-              Tab(text: 'Ingredients'),
-              Tab(text: 'Instructions'),
-              Tab(text: 'Nutrition'),
-            ],
-          ),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: recipe.ingredients.isEmpty
-                      ? [const Text('No ingredient list for this recipe.')]
-                      : recipe.ingredients.map((m) {
-                          final name = (m['name'] ?? m['original'] ?? '')
-                              .toString();
-                          final amount = m['amount'];
-                          final unit = (m['unit'] ?? '').toString();
-                          final qty =
-                              [if (amount != null) amount.toString(), unit]
-                                  .where((s) => s.toString().trim().isNotEmpty)
-                                  .join(' ');
-                          return IngredientRow(
-                            name: name.isEmpty ? 'Item' : name,
-                            quantity: qty.isEmpty ? '—' : qty,
-                          );
-                        }).toList(),
-                ),
-                ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: recipe.steps.isEmpty
-                      ? const [
-                          Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(16),
-                              child: Text('No instructions available.'),
+                      builder: (context, snap) {
+                        final isFav = snap.data ?? false;
+                        return CircleAvatar(
+                          backgroundColor: Colors.white70,
+                          child: IconButton(
+                            icon: Icon(
+                              isFav
+                                  ? Icons.favorite
+                                  : Icons.favorite_border_rounded,
+                              color: isFav ? Colors.redAccent : null,
                             ),
+                            onPressed: () => _toggleFavorite(context, isFav),
                           ),
-                        ]
-                      : List.generate(recipe.steps.length, (i) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                        );
+                      },
+                    ),
+                  ),
+                ],
+                flexibleSpace: FlexibleSpaceBar(
+                  collapseMode: CollapseMode.pin,
+                  background: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      RecipeHeroVisual(
+                        title: recipe.title,
+                        imageUrl: recipe.imageUrl,
+                        height: heroHeight,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              recipe.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.headlineSmall,
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
                               children: [
-                                CircleAvatar(
-                                  radius: 14,
-                                  child: Text('${i + 1}'),
+                                InfoPill(
+                                  icon: Icons.schedule_rounded,
+                                  label: '${recipe.prepTime} min',
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(child: Text(recipe.steps[i])),
+                                InfoPill(
+                                  icon: Icons.payments_rounded,
+                                  label:
+                                      'RM${recipe.estimatedCost.toStringAsFixed(2)}',
+                                ),
+                                InfoPill(
+                                  icon: Icons.local_fire_department_rounded,
+                                  label: '${recipe.calories} cal',
+                                ),
+                                InfoPill(
+                                  icon: Icons.fitness_center_rounded,
+                                  label: '${macros['protein'] ?? '0g'} protein',
+                                ),
                               ],
                             ),
-                          );
-                        }),
-                ),
-                ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    ListTile(
-                      title: const Text('Calories'),
-                      trailing: Text('${recipe.calories} kcal'),
-                    ),
-                    ListTile(
-                      title: const Text('Protein'),
-                      trailing: Text(macros['protein'] ?? '—'),
-                    ),
-                    ListTile(
-                      title: const Text('Carbohydrates'),
-                      trailing: Text(macros['carbs'] ?? '—'),
-                    ),
-                    ListTile(
-                      title: const Text('Fat'),
-                      trailing: Text(macros['fat'] ?? '—'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Column(
-              children: [
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: () => _addToMealPlan(context),
-                    icon: const Icon(Icons.event_note_rounded),
-                    label: const Text('Add to Meal Plan'),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () => _logCooked(context),
-                    icon: const Icon(Icons.check_circle_outline_rounded),
-                    label: const Text('Mark as cooked'),
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(kTextTabBarHeight),
+                  child: Material(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    child: TabBar(
+                      controller: _tabController,
+                      tabs: const [
+                        Tab(text: 'Ingredients'),
+                        Tab(text: 'Instructions'),
+                        Tab(text: 'Nutrition'),
+                      ],
+                    ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ];
+          },
+          body: TabBarView(
+            controller: _tabController,
+            children: [
+              ListView(
+                primary: false,
+                padding: const EdgeInsets.all(16),
+                children: recipe.ingredients.isEmpty
+                    ? [const Text('No ingredient list for this recipe.')]
+                    : recipe.ingredients.map((m) {
+                        final name = (m['name'] ?? m['original'] ?? '')
+                            .toString();
+                        final amount = m['amount'];
+                        final unit = (m['unit'] ?? '').toString();
+                        final qty =
+                            [if (amount != null) amount.toString(), unit]
+                                .where((s) => s.toString().trim().isNotEmpty)
+                                .join(' ');
+                        return IngredientRow(
+                          name: name.isEmpty ? 'Item' : name,
+                          quantity: qty.isEmpty ? '—' : qty,
+                        );
+                      }).toList(),
+              ),
+              ListView(
+                primary: false,
+                padding: const EdgeInsets.all(16),
+                children: recipe.steps.isEmpty
+                    ? const [
+                        Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(16),
+                            child: Text('No instructions available.'),
+                          ),
+                        ),
+                      ]
+                    : List.generate(recipe.steps.length, (i) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              CircleAvatar(radius: 14, child: Text('${i + 1}')),
+                              const SizedBox(width: 12),
+                              Expanded(child: Text(recipe.steps[i])),
+                            ],
+                          ),
+                        );
+                      }),
+              ),
+              ListView(
+                primary: false,
+                padding: const EdgeInsets.all(16),
+                children: [
+                  ListTile(
+                    title: const Text('Calories'),
+                    trailing: Text('${recipe.calories} kcal'),
+                  ),
+                  ListTile(
+                    title: const Text('Protein'),
+                    trailing: Text(macros['protein'] ?? '—'),
+                  ),
+                  ListTile(
+                    title: const Text('Carbohydrates'),
+                    trailing: Text(macros['carbs'] ?? '—'),
+                  ),
+                  ListTile(
+                    title: const Text('Fat'),
+                    trailing: Text(macros['fat'] ?? '—'),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => _addToMealPlan(context),
+                icon: const Icon(Icons.event_note_rounded),
+                label: const Text('Add to Meal Plan'),
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _logCooked(context),
+                icon: const Icon(Icons.check_circle_outline_rounded),
+                label: const Text('Mark as cooked'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
