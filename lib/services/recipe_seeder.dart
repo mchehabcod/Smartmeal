@@ -1,12 +1,11 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
+import '../config.dart';
 import '../models/recipe_model.dart';
 
 class RecipeSeeder {
-  static const String _configuredApiKey = String.fromEnvironment(
-    'SPOONACULAR_API_KEY',
-  );
+  static const String _configuredApiKey = AppConfig.spoonacularApiKey;
   static const String _baseUrl = 'https://api.spoonacular.com';
 
   final FirebaseFirestore _db;

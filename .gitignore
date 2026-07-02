@@ -43,3 +43,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Thesis drafts
+chapter_5_draft.md
+
+# Local configurations containing secrets
+/lib/config.dart

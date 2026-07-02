@@ -61,7 +61,11 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: const Color(0xFFE9EDF4),
         selectedColor: navy,
-        labelStyle: const TextStyle(fontWeight: FontWeight.w600),
+        labelStyle: const TextStyle(
+          color: navy,
+          fontWeight: FontWeight.w600,
+        ),
+        deleteIconColor: navy,
       ),
       navigationBarTheme: const NavigationBarThemeData(
         indicatorColor: Color(0xFFDCE6F7),
@@ -175,9 +179,14 @@ class AppTheme {
       ),
       chipTheme: ChipThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: mint,
+        backgroundColor: const Color(0xFFD4EFE0), // Slightly darker, richer mint green
         selectedColor: navy,
-        labelStyle: const TextStyle(fontWeight: FontWeight.w600),
+        labelStyle: const TextStyle(
+          color: Color(0xFF1E6C4C), // Dark green for excellent readability
+          fontWeight: FontWeight.w600,
+        ),
+        deleteIconColor: const Color(0xFF1E6C4C),
+        side: const BorderSide(color: Color(0xFFBCE8D0)), // Subtle border to define edge
       ),
       navigationBarTheme: const NavigationBarThemeData(
         indicatorColor: Color(0xFFDCE6F7),
@@ -204,6 +213,7 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: navy,
+        contentTextStyle: const TextStyle(color: Colors.white),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
@@ -281,6 +291,7 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: const Color(0xFF243044),
+        contentTextStyle: const TextStyle(color: Colors.white),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );

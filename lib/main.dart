@@ -2,31 +2,43 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'controllers/auth_controller.dart';
 import 'models/user_model.dart';
 import 'theme/app_theme.dart';
 import 'views/auth/auth_screen.dart';
 import 'views/home/home_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const SmartMealApp());
+  final prefs = await SharedPreferences.getInstance();
+  final isDarkMode = prefs.getBool('is_dark_mode') ?? false;
+  runApp(SmartMealApp(initialDarkMode: isDarkMode));
 }
 
 class SmartMealApp extends StatefulWidget {
-  const SmartMealApp({super.key});
+  final bool initialDarkMode;
+  const SmartMealApp({super.key, required this.initialDarkMode});
 
   @override
   State<SmartMealApp> createState() => _SmartMealAppState();
 }
 
 class _SmartMealAppState extends State<SmartMealApp> {
-  ThemeMode _themeMode = ThemeMode.light;
+  late ThemeMode _themeMode;
 
-  void _updateTheme(bool isDarkMode) {
+  @override
+  void initState() {
+    super.initState();
+    _themeMode = widget.initialDarkMode ? ThemeMode.dark : ThemeMode.light;
+  }
+
+  void _updateTheme(bool isDarkMode) async {
     setState(() {
       _themeMode = isDarkMode ? ThemeMode.dark : ThemeMode.light;
     });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_dark_mode', isDarkMode);
   }
 
   @override
